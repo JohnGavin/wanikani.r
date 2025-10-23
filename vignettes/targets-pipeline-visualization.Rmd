@@ -1,6 +1,11 @@
 ---
 title: "Targets Pipeline Visualization and Diagnostics"
-output: rmarkdown::html_vignette
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+    theme: cosmo
 vignette: >
   %\VignetteIndexEntry{Targets Pipeline Visualization and Diagnostics}
   %\VignetteEngine{knitr::rmarkdown}
@@ -24,7 +29,8 @@ knitr::opts_chunk$set(
   fig.height = 6,
   warning = FALSE,
   message = FALSE,
-  eval = FALSE  # Default to not evaluating chunks
+  echo = FALSE,  # Hide code by default
+  eval = FALSE   # Default to not evaluating chunks
 )
 
 # Early exit if packages not available - MUST be before any library() calls

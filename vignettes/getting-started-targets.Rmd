@@ -1,6 +1,11 @@
 ---
 title: "Getting Started with Targets"
-output: rmarkdown::html_vignette
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    theme: cosmo
 vignette: >
   %\VignetteIndexEntry{Getting Started with Targets}
   %\VignetteEngine{knitr::rmarkdown}
