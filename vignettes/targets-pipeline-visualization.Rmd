@@ -9,7 +9,13 @@ vignette: >
 
 ```{r, include = FALSE}
 # Check if targets is available - if not, skip all chunk evaluation
-has_targets <- requireNamespace("targets", quietly = TRUE)
+has_targets <- requireNamespace("targets", quietly = TRUE) &&
+               requireNamespace("dplyr", quietly = TRUE) &&
+               requireNamespace("tidyr", quietly = TRUE) &&
+               requireNamespace("ggplot2", quietly = TRUE)
+
+# Set pipeline_exists to FALSE by default (will be overridden if targets is available)
+pipeline_exists <- FALSE
 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -17,9 +23,19 @@ knitr::opts_chunk$set(
   fig.width = 8,
   fig.height = 6,
   warning = FALSE,
-  message = FALSE,
-  eval = has_targets  # Only evaluate chunks if targets is available
+  message = FALSE
 )
+
+# If packages available, load them and check for pipeline
+if (has_targets) {
+  library(targets)
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+
+  # Now check if pipeline has been run
+  pipeline_exists <- file.exists("_targets/meta/meta")
+}
 ```
 
 ## Introduction
@@ -41,19 +57,9 @@ if (!requireNamespace("targets", quietly = TRUE)) {
 
 ## Setup
 
-```{r setup}
-library(targets)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
-# Check if pipeline has been run
-pipeline_exists <- file.exists("_targets/meta/meta")
-
-if (!pipeline_exists) {
-  message("Pipeline has not been run yet. Run targets::tar_make() first.")
-  message("For this vignette, we'll show the expected structure.")
-}
+```{r setup, eval=pipeline_exists, echo=FALSE}
+# Pipeline is ready - targets loaded and data available
+message("Pipeline loaded successfully")
 ```
 
 ## Pipeline Structure
