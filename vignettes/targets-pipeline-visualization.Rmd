@@ -8,13 +8,17 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+# Check if targets is available - if not, skip all chunk evaluation
+has_targets <- requireNamespace("targets", quietly = TRUE)
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 8,
   fig.height = 6,
   warning = FALSE,
-  message = FALSE
+  message = FALSE,
+  eval = has_targets  # Only evaluate chunks if targets is available
 )
 ```
 
@@ -28,38 +32,25 @@ This vignette provides comprehensive visualization and diagnostics of the `targe
 - Target status and metadata
 - Session information
 
+```{r check-targets, echo=FALSE, results='asis', eval=TRUE}
+if (!requireNamespace("targets", quietly = TRUE)) {
+  cat("**Note:** This vignette requires the `targets` package to be installed. ")
+  cat("Install it with `install.packages('targets')` to view the full content.\n\n")
+}
+```
+
 ## Setup
 
 ```{r setup}
-# Check for required packages
-has_targets <- requireNamespace("targets", quietly = TRUE)
-has_dplyr <- requireNamespace("dplyr", quietly = TRUE)
-has_tidyr <- requireNamespace("tidyr", quietly = TRUE)
-has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
-
-if (!has_targets) {
-  message("This vignette requires the 'targets' package.")
-  message("Install with: install.packages('targets')")
-  knitr::opts_chunk$set(eval = FALSE)
-}
-
-if (has_targets) {
-  library(targets)
-}
-if (has_dplyr) {
-  library(dplyr)
-}
-if (has_tidyr) {
-  library(tidyr)
-}
-if (has_ggplot2) {
-  library(ggplot2)
-}
+library(targets)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
 
 # Check if pipeline has been run
-pipeline_exists <- has_targets && file.exists("_targets/meta/meta")
+pipeline_exists <- file.exists("_targets/meta/meta")
 
-if (has_targets && !pipeline_exists) {
+if (!pipeline_exists) {
   message("Pipeline has not been run yet. Run targets::tar_make() first.")
   message("For this vignette, we'll show the expected structure.")
 }
