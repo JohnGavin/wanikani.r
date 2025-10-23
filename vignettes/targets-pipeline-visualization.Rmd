@@ -7,12 +7,15 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r, include = FALSE, error = TRUE}
 # Check if targets is available - if not, skip all chunk evaluation
 has_targets <- requireNamespace("targets", quietly = TRUE) &&
                requireNamespace("dplyr", quietly = TRUE) &&
                requireNamespace("tidyr", quietly = TRUE) &&
                requireNamespace("ggplot2", quietly = TRUE)
+
+# Set pipeline_exists to FALSE by default
+pipeline_exists <- FALSE
 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -20,22 +23,28 @@ knitr::opts_chunk$set(
   fig.width = 8,
   fig.height = 6,
   warning = FALSE,
-  message = FALSE
+  message = FALSE,
+  eval = FALSE  # Default to not evaluating chunks
 )
 
-# If packages are not available, stop processing this vignette
+# Early exit if packages not available - MUST be before any library() calls
 if (!has_targets) {
   knitr::knit_exit()
+} else {
+  # Only load libraries if we have the packages
+  suppressPackageStartupMessages({
+    library(targets)
+    library(dplyr)
+    library(tidyr)
+    library(ggplot2)
+  })
+
+  # Check if pipeline has been run
+  pipeline_exists <- file.exists("_targets/meta/meta")
+
+  # Enable evaluation for chunks that should run
+  knitr::opts_chunk$set(eval = pipeline_exists)
 }
-
-# Load required packages
-library(targets)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
-# Check if pipeline has been run
-pipeline_exists <- file.exists("_targets/meta/meta")
 ```
 
 ## Introduction
