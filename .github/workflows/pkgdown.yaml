@@ -61,13 +61,14 @@ jobs:
                         rPackages.tidyr
                         rPackages.targets
                         rPackages.tarchetypes
+                        rPackages.visNetwork
                         pandoc
                         qpdf
                       ];
                     }' \
             --run 'R -e "
-            # Install package
-            devtools::install(dependencies = TRUE, upgrade = \"never\")
+            # Install package (dependencies already in Nix environment)
+            devtools::install(dependencies = FALSE, upgrade = \"never\")
 
             # Build site
             pkgdown::build_site_github_pages(
