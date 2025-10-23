@@ -45,6 +45,7 @@ jobs:
                         rPackages.jsonlite
                         rPackages.R6
                         pandoc
+                        qpdf
                       ];
                     }' \
             --run 'R -e "devtools::check(args = c(\"--no-manual\", \"--as-cran\"), error_on = \"warning\")"'

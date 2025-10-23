@@ -1,8 +1,8 @@
 ---
-title: "Getting Started with wanikani.r"
+title: "Getting Started with Targets"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Getting Started with wanikani.r}
+  %\VignetteIndexEntry{Getting Started with Targets}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

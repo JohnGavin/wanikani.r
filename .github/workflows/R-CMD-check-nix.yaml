@@ -35,7 +35,7 @@ jobs:
           rix::rix(
             r_ver = 'latest-upstream',
             r_pkgs = c('devtools', 'roxygen2', 'testthat', 'httr', 'jsonlite', 'R6'),
-            system_pkgs = c('pandoc'),
+            system_pkgs = c('pandoc', 'qpdf'),
             git_pkgs = NULL,
             ide = 'none',
             project_path = '.',

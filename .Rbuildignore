@@ -25,3 +25,8 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^default\.nix$
+^result$
+^PKGDOWN_README\.md$
+^QUICKSTART_TARGETS\.md$
+^TARGETS_README\.md$

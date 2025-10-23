@@ -62,6 +62,7 @@ jobs:
                         rPackages.targets
                         rPackages.tarchetypes
                         pandoc
+                        qpdf
                       ];
                     }' \
             --run 'R -e "
