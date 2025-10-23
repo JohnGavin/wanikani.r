@@ -1,0 +1,367 @@
+---
+title: "Getting Started with wanikani.r"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with wanikani.r}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## Introduction
+
+The `wanikani` package provides a complete R interface to the WaniKani API v2. WaniKani is a Japanese learning platform that uses spaced repetition to teach kanji and vocabulary.
+
+This vignette will walk you through the basics of using the package.
+
+## Installation
+
+```{r installation}
+# Install from GitHub
+# install.packages("devtools")
+devtools::install_github("yourusername/wanikani.r")
+```
+
+## Authentication
+
+First, you need to get your API token from WaniKani:
+https://www.wanikani.com/settings/personal_access_tokens
+
+Set it as an environment variable (recommended):
+
+```{r auth}
+Sys.setenv(WANIKANI_API_TOKEN = "your_token_here")
+```
+
+Or add it to your `.Renviron` file for persistence across R sessions.
+
+## Basic Usage
+
+### Load the package
+
+```{r setup}
+library(wanikani)
+```
+
+### Get User Information
+
+```{r user}
+# Get your user profile
+user <- wk_user()
+
+# Access user data
+username <- user$data$username
+current_level <- user$data$level
+subscription_type <- user$data$subscription$type
+
+cat(sprintf("User: %s\nLevel: %d\n", username, current_level))
+```
+
+### Get Study Summary
+
+```{r summary}
+# Get summary of upcoming lessons and reviews
+summary <- wk_summary()
+
+# When is your next review?
+next_review <- summary$data$next_reviews_at
+print(next_review)
+
+# How many reviews are available now?
+available_reviews <- length(summary$data$reviews)
+print(available_reviews)
+```
+
+## Working with Subjects
+
+Subjects are the radicals, kanji, and vocabulary that you learn in WaniKani.
+
+### Get Subjects by Level
+
+```{r subjects-level}
+# Get all subjects from level 1
+level1 <- wk_subjects(levels = 1)
+
+# How many items in level 1?
+num_items <- length(level1$data)
+print(num_items)
+
+# Get the first item
+first_item <- level1$data[[1]]
+print(first_item$data$characters)
+print(first_item$data$meanings)
+```
+
+### Filter by Type
+
+```{r subjects-type}
+# Get only kanji from levels 1-3
+kanji <- wk_subjects(
+  types = "kanji",
+  levels = c(1, 2, 3)
+)
+
+# Get only radicals
+radicals <- wk_subjects(types = "radical", levels = 1)
+
+# Get vocabulary
+vocabulary <- wk_subjects(types = "vocabulary", levels = 1)
+```
+
+### Get Specific Subject
+
+```{r subjects-id}
+# Get a specific subject by ID
+subject <- wk_subjects_by_id(440)
+
+print(subject$data$characters)
+print(subject$data$meanings)
+print(subject$data$readings)
+```
+
+## Working with Assignments
+
+Assignments represent your progress on specific subjects.
+
+### Get Your Assignments
+
+```{r assignments}
+# Get all unlocked assignments
+assignments <- wk_assignments(unlocked = TRUE)
+
+# Get assignments for your current level
+my_assignments <- wk_assignments(levels = current_level)
+
+# Get assignments that are available for review now
+available_now <- wk_assignments(
+  available_before = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ")
+)
+```
+
+### Filter by SRS Stage
+
+```{r assignments-srs}
+# Get assignments at Apprentice stage (1-4)
+apprentice <- wk_assignments(srs_stages = c(1, 2, 3, 4))
+
+# Get assignments at Guru stage (5-6)
+guru <- wk_assignments(srs_stages = c(5, 6))
+
+# Get burned items (stage 9)
+burned <- wk_assignments(burned = TRUE)
+```
+
+### Start an Assignment
+
+```{r assignment-start}
+# When you start a lesson, mark the assignment as started
+assignment <- wk_assignments_start(123456)
+```
+
+## Reviews and Statistics
+
+### Get Review History
+
+```{r reviews}
+# Get recent reviews (last 7 days)
+seven_days_ago <- format(Sys.time() - 7*24*60*60, "%Y-%m-%dT%H:%M:%SZ")
+recent_reviews <- wk_reviews(updated_after = seven_days_ago)
+
+# Get reviews for specific subjects
+subject_reviews <- wk_reviews(subject_ids = c(440, 441, 442))
+```
+
+### Create a Review
+
+```{r review-create}
+# Record a review (after completing a review session)
+review <- wk_reviews_create(
+  assignment_id = 123456,
+  incorrect_meaning_answers = 0,
+  incorrect_reading_answers = 1
+)
+```
+
+### Get Review Statistics
+
+```{r stats}
+# Get statistics for items you struggle with
+struggling <- wk_review_statistics(
+  percentages_less_than = 75
+)
+
+# Get statistics for kanji only
+kanji_stats <- wk_review_statistics(
+  subject_types = "kanji"
+)
+
+# Get statistics for specific subjects
+subject_stats <- wk_review_statistics(
+  subject_ids = c(440, 441, 442)
+)
+```
+
+## Study Materials
+
+Study materials let you add custom notes and synonyms to subjects.
+
+### Create Study Material
+
+```{r study-create}
+# Add a custom note and synonyms
+material <- wk_study_materials_create(
+  subject_id = 440,
+  meaning_note = "Think of a tall tree reaching to heaven",
+  meaning_synonyms = c("tree", "wood", "timber")
+)
+```
+
+### Update Study Material
+
+```{r study-update}
+# Update an existing study material
+updated <- wk_study_materials_update(
+  id = material$data$id,
+  meaning_note = "Updated: Looks like a tree with branches",
+  meaning_synonyms = c("tree", "wood", "timber", "forest")
+)
+```
+
+### Get Study Materials
+
+```{r study-get}
+# Get all your study materials
+my_materials <- wk_study_materials()
+
+# Get study materials for specific subjects
+subject_materials <- wk_study_materials(
+  subject_ids = c(440, 441, 442)
+)
+```
+
+## Pagination
+
+Many endpoints return paginated results. The package provides helpers for this.
+
+### Automatic Pagination
+
+```{r pagination-auto}
+# Fetch all pages automatically
+all_subjects <- wk_fetch_all_pages(
+  wk_subjects,
+  types = "kanji",
+  verbose = TRUE
+)
+
+# This returns a list with:
+# - data: all items from all pages
+# - page_count: number of pages fetched
+# - total_count: total number of items
+
+cat(sprintf("Fetched %d kanji across %d pages\n",
+            all_subjects$total_count,
+            all_subjects$page_count))
+```
+
+### Manual Pagination
+
+```{r pagination-manual}
+# Get first page
+page1 <- wk_subjects(levels = 1)
+
+# Check if more pages exist
+if (wk_has_next_page(page1)) {
+  next_url <- wk_next_page_url(page1)
+  # You would then parse this URL and make another request
+  # Or just use wk_fetch_all_pages()
+}
+
+# Extract just the data
+subjects_data <- wk_extract_data(page1)
+```
+
+## Advanced Usage: R6 Client
+
+For more control, you can use the `WaniKaniClient` R6 class directly.
+
+```{r r6-client}
+# Create a client
+client <- WaniKaniClient$new(api_token = "your_token")
+
+# Make custom requests
+response <- client$get("/subjects", query = list(
+  levels = "1,2,3",
+  types = "kanji"
+))
+
+# Check rate limit status
+remaining <- client$rate_limit_remaining
+reset_time <- as.POSIXct(client$rate_limit_reset, origin = "1970-01-01")
+
+cat(sprintf("Remaining requests: %d\nResets at: %s\n",
+            remaining, reset_time))
+
+# POST request
+new_material <- client$post(
+  "/study_materials",
+  body = list(
+    study_material = list(
+      subject_id = 440,
+      meaning_note = "My custom note"
+    )
+  )
+)
+
+# PUT request
+updated <- client$put(
+  "/user",
+  body = list(
+    user = list(
+      preferences = list(
+        lessons_autoplay_audio = TRUE
+      )
+    )
+  )
+)
+```
+
+## Rate Limiting
+
+The WaniKani API has a rate limit of 60 requests per minute. The client tracks this automatically:
+
+```{r rate-limit}
+client <- WaniKaniClient$new()
+
+# Make some requests
+for (i in 1:5) {
+  response <- client$get("/user")
+  cat(sprintf("Request %d - Remaining: %d\n", i, client$rate_limit_remaining))
+
+  # If you're close to the limit, you can wait
+  if (client$rate_limit_remaining < 5) {
+    wait_until <- as.POSIXct(client$rate_limit_reset, origin = "1970-01-01")
+    wait_seconds <- as.numeric(difftime(wait_until, Sys.time(), units = "secs"))
+    message(sprintf("Approaching rate limit. Waiting %d seconds...", wait_seconds))
+    Sys.sleep(wait_seconds)
+  }
+}
+```
+
+## Conclusion
+
+This vignette covered the basics of using the `wanikani` package. For more details on specific functions, see their help pages:
+
+```{r help, eval=FALSE}
+?wk_subjects
+?wk_assignments
+?WaniKaniClient
+```
+
+Happy studying!

@@ -1,0 +1,23 @@
+Package: wanikani
+Type: Package
+Title: R Client for the WaniKani API
+Version: 0.1.0
+Authors@R: person("John", "Gavin", email = "john.gavin@gmail.com", role = c("aut", "cre"))
+Author: John Gavin [aut, cre]
+Maintainer: John Gavin <john.gavin@gmail.com>
+Description: Provides a complete interface to the WaniKani API v2 for accessing Japanese
+    learning data including assignments, reviews, subjects, and study materials. WaniKani
+    is a Japanese learning platform that uses spaced repetition to teach kanji and vocabulary.
+License: MIT + file LICENSE
+Encoding: UTF-8
+RoxygenNote: 7.3.2
+Imports:
+    httr (>= 1.4.0),
+    jsonlite (>= 1.7.0),
+    R6 (>= 2.5.0)
+Suggests:
+    testthat (>= 3.0.0),
+    httptest (>= 4.0.0),
+    covr
+URL: https://github.com/yourusername/wanikani.r, https://docs.api.wanikani.com/
+BugReports: https://github.com/yourusername/wanikani.r/issues

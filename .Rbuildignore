@@ -1,0 +1,17 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^README\.Rmd$
+^LICENSE\.md$
+^\.github$
+^\.git$
+^\.gitignore$
+^cran-comments\.md$
+^\.DS_Store$
+^check_package\.R$
+^verify_package\.sh$
+^INSTALL\.md$
+^PACKAGE_SUMMARY\.md$
+^LATEX_NOTE\.md$
+^fix_and_check\.R$
+^generate_docs\.R$
+^vignettes_backup$
