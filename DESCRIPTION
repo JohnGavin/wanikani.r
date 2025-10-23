@@ -22,7 +22,9 @@ Suggests:
     targets,
     tarchetypes,
     knitr,
-    rmarkdown
+    rmarkdown,
+    ggplot2,
+    visNetwork
 VignetteBuilder: knitr
 URL: https://github.com/yourusername/wanikani.r, https://docs.api.wanikani.com/
 BugReports: https://github.com/yourusername/wanikani.r/issues
