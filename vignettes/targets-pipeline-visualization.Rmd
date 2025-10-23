@@ -14,9 +14,6 @@ has_targets <- requireNamespace("targets", quietly = TRUE) &&
                requireNamespace("tidyr", quietly = TRUE) &&
                requireNamespace("ggplot2", quietly = TRUE)
 
-# Set pipeline_exists to FALSE by default (will be overridden if targets is available)
-pipeline_exists <- FALSE
-
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -26,16 +23,19 @@ knitr::opts_chunk$set(
   message = FALSE
 )
 
-# If packages available, load them and check for pipeline
-if (has_targets) {
-  library(targets)
-  library(dplyr)
-  library(tidyr)
-  library(ggplot2)
-
-  # Now check if pipeline has been run
-  pipeline_exists <- file.exists("_targets/meta/meta")
+# If packages are not available, stop processing this vignette
+if (!has_targets) {
+  knitr::knit_exit()
 }
+
+# Load required packages
+library(targets)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Check if pipeline has been run
+pipeline_exists <- file.exists("_targets/meta/meta")
 ```
 
 ## Introduction
@@ -47,13 +47,6 @@ This vignette provides comprehensive visualization and diagnostics of the `targe
 - Memory usage statistics
 - Target status and metadata
 - Session information
-
-```{r check-targets, echo=FALSE, results='asis', eval=TRUE}
-if (!requireNamespace("targets", quietly = TRUE)) {
-  cat("**Note:** This vignette requires the `targets` package to be installed. ")
-  cat("Install it with `install.packages('targets')` to view the full content.\n\n")
-}
-```
 
 ## Setup
 
