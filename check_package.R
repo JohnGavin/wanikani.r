@@ -15,7 +15,15 @@ library(devtools)
 library(roxygen2)
 
 # Set working directory to package root
-setwd(dirname(sys.frame(1)$ofile))
+# Get script location using commandArgs
+args <- commandArgs(trailingOnly = FALSE)
+script_path <- sub("--file=", "", args[grep("--file=", args)])
+if (length(script_path) > 0) {
+  setwd(dirname(script_path))
+} else {
+  # If run interactively, assume we're already in the right directory
+  message("Running interactively - assuming current directory is package root")
+}
 
 message("=== Step 1: Loading package ===")
 load_all()

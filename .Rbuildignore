@@ -15,3 +15,7 @@
 ^fix_and_check\.R$
 ^generate_docs\.R$
 ^vignettes_backup$
+^COMPLETION_SUMMARY\.md$
+^GITHUB_SUBMISSION\.md$
+^gh_submit\.R$
+^gh_submit_simple\.sh$

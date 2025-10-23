@@ -14,7 +14,11 @@ library(roxygen2)
 library(devtools)
 
 # Set working directory to package root
-setwd(dirname(sys.frame(1)$ofile))
+args <- commandArgs(trailingOnly = FALSE)
+script_path <- sub("--file=", "", args[grep("--file=", args)])
+if (length(script_path) > 0) {
+  setwd(dirname(script_path))
+}
 
 message("=== Generating documentation with roxygen2 ===")
 roxygen2::roxygenise()
