@@ -1,0 +1,246 @@
+# pkgdown Website Documentation
+
+This package has a pkgdown website that automatically deploys documentation to GitHub Pages.
+
+## Website URL
+
+**Live site**: https://johngavin.github.io/wanikani.r/
+
+## Features
+
+### Documentation
+- **Reference**: Complete function documentation for all 27 API endpoints
+- **Vignettes**:
+  - Getting Started guide
+  - Getting Started with Targets
+  - Targets Pipeline Visualization
+- **Examples**: Code examples for every function
+- **Search**: Full-text search across all documentation
+
+### Organization
+
+The reference page is organized into logical sections:
+- Client and Setup
+- User and Summary
+- Assignments
+- Subjects
+- Reviews
+- Review Statistics
+- Study Materials
+- Level Progressions
+- Resets
+- Spaced Repetition Systems
+- Voice Actors
+- Pagination Helpers
+
+### Customization
+
+The site uses:
+- **Bootstrap 5** with Cosmo theme
+- **Primary color**: #0054AD (WaniKani blue)
+- **Navigation bar** with links to:
+  - Get Started
+  - Reference
+  - Articles (vignettes dropdown)
+  - WaniKani API Documentation
+  - GitHub repository
+
+## Building the Site Locally
+
+### Prerequisites
+
+```r
+install.packages("pkgdown")
+```
+
+### Build Commands
+
+```r
+# Build full site
+pkgdown::build_site()
+
+# Build just reference pages
+pkgdown::build_reference()
+
+# Build just articles/vignettes
+pkgdown::build_articles()
+
+# Preview the site
+pkgdown::preview_site()
+```
+
+## GitHub Actions Deployment
+
+The site automatically builds and deploys on:
+- Push to main branch
+- Pull requests (build only, no deploy)
+- Manual trigger via workflow_dispatch
+
+### Workflow: `.github/workflows/pkgdown.yaml`
+
+**Features:**
+- Uses Nix for reproducible environment
+- Includes all R package dependencies
+- Installs pandoc for vignette building
+- Deploys to GitHub Pages
+- Caches via Cachix for faster builds
+
+**Steps:**
+1. Checkout code
+2. Install Nix
+3. Setup Cachix
+4. Build site with pkgdown
+5. Upload to GitHub Pages
+6. Deploy (main branch only)
+
+## Configuration
+
+### `_pkgdown.yml`
+
+Main configuration file with:
+- Site URL and metadata
+- Bootstrap theme customization
+- Navigation bar structure
+- Reference organization
+- Article groupings
+- Footer content
+
+### Key Settings
+
+```yaml
+url: https://johngavin.github.io/wanikani.r/
+template:
+  bootstrap: 5
+  bootswatch: cosmo
+
+navbar:
+  components:
+    articles:
+      menu:
+      - text: Getting Started
+      - text: Getting Started with Targets
+      - text: Targets Pipeline Visualization
+```
+
+## Vignettes
+
+All vignettes automatically appear in the website:
+
+1. **getting-started.Rmd**: Basic package usage
+2. **getting-started-targets.Rmd**: Using targets for pre-computation
+3. **targets-pipeline-visualization.Rmd**: Pipeline diagnostics and visualizations
+
+Vignettes are accessible via:
+- Top navbar → Articles dropdown
+- Reference page → Related articles
+- Direct URL: `/articles/vignette-name.html`
+
+## GitHub Pages Setup
+
+### Enable GitHub Pages
+
+1. Go to repository Settings
+2. Navigate to Pages
+3. Source: GitHub Actions (already configured)
+4. The site will deploy automatically on push
+
+### Permissions
+
+The workflow requires these permissions (already configured):
+- `contents: read`
+- `pages: write`
+- `id-token: write`
+
+## Customization
+
+### Change Theme
+
+Edit `_pkgdown.yml`:
+
+```yaml
+template:
+  bootstrap: 5
+  bootswatch: flatly  # or any other bootswatch theme
+```
+
+### Add Custom CSS
+
+Create `pkgdown/extra.css` and reference in `_pkgdown.yml`:
+
+```yaml
+template:
+  includes:
+    in_header: |
+      <link rel="stylesheet" href="extra.css">
+```
+
+### Modify Navigation
+
+Edit the `navbar` section in `_pkgdown.yml`:
+
+```yaml
+navbar:
+  components:
+    custom_link:
+      text: "Custom Page"
+      href: custom-page.html
+```
+
+## Troubleshooting
+
+### Site not deploying
+
+1. Check GitHub Actions tab for errors
+2. Ensure GitHub Pages is enabled in Settings
+3. Verify workflow permissions
+
+### Vignettes not showing
+
+1. Ensure vignettes have proper YAML header:
+   ```yaml
+   vignette: >
+     %\VignetteIndexEntry{Title}
+     %\VignetteEngine{knitr::rmarkdown}
+     %\VignetteEncoding{UTF-8}
+   ```
+2. Build vignettes locally: `devtools::build_vignettes()`
+3. Check vignettes appear in `vignettes/` directory
+
+### Examples not rendering
+
+1. Check roxygen2 comments in R files
+2. Use `@examples` tag
+3. Use `\dontrun{}` for code requiring API credentials
+
+## Maintenance
+
+### Update site after changes
+
+The site updates automatically on push to main. For manual updates:
+
+```r
+pkgdown::build_site()
+```
+
+### Preview before push
+
+```r
+pkgdown::preview_site()
+```
+
+This opens a local web server to preview the site.
+
+## Resources
+
+- [pkgdown documentation](https://pkgdown.r-lib.org/)
+- [Bootstrap themes](https://bootswatch.com/)
+- [GitHub Pages docs](https://docs.github.com/en/pages)
+- [pkgdown customization](https://pkgdown.r-lib.org/articles/customise.html)
+
+## Notes
+
+- The `docs/` directory is gitignored (generated by CI)
+- Site builds take ~3-5 minutes via GitHub Actions
+- All vignettes are built as HTML automatically
+- Search functionality is included out-of-the-box
+- Mobile-responsive design with Bootstrap 5

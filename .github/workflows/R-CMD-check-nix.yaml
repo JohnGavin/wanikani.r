@@ -37,7 +37,7 @@ jobs:
             r_pkgs = c('devtools', 'roxygen2', 'testthat', 'httr', 'jsonlite', 'R6'),
             system_pkgs = c('pandoc'),
             git_pkgs = NULL,
-            ide = 'other',
+            ide = 'none',
             project_path = '.',
             overwrite = TRUE,
             print = TRUE

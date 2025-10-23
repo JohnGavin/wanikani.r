@@ -9,3 +9,5 @@ inst/doc
 _targets/
 *.Rcheck
 *.tar.gz
+docs/
+pkgdown/

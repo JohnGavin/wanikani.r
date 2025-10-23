@@ -22,3 +22,6 @@
 ^_targets\.R$
 ^_targets$
 ^\.github$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

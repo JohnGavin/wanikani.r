@@ -1,0 +1,159 @@
+url: https://johngavin.github.io/wanikani.r/
+template:
+  bootstrap: 5
+  bootswatch: cosmo
+  bslib:
+    primary: "#0054AD"
+    border-radius: 0.5rem
+    btn-border-radius: 0.25rem
+
+home:
+  title: "wanikani • R Client for the WaniKani API"
+  description: >
+    Complete interface to the WaniKani API v2 for Japanese learning data
+    including assignments, reviews, subjects, and study materials.
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, tutorials, news]
+    right: [search, github, wanikani]
+  components:
+    home: ~
+    intro:
+      text: Get Started
+      href: articles/getting-started.html
+    reference:
+      text: Reference
+      href: reference/index.html
+    articles:
+      text: Articles
+      menu:
+      - text: Getting Started
+        href: articles/getting-started.html
+      - text: Getting Started with Targets
+        href: articles/getting-started-targets.html
+      - text: Targets Pipeline Visualization
+        href: articles/targets-pipeline-visualization.html
+    wanikani:
+      icon: fa-book
+      href: https://docs.api.wanikani.com/
+      aria-label: WaniKani API Docs
+
+reference:
+- title: "Client and Setup"
+  desc: >
+    Core R6 client class and setup functions
+  contents:
+  - WaniKaniClient
+
+- title: "User and Summary"
+  desc: >
+    Functions for accessing user information and study summaries
+  contents:
+  - wk_user
+  - wk_user_update
+  - wk_summary
+
+- title: "Assignments"
+  desc: >
+    Functions for managing assignments and study progress
+  contents:
+  - wk_assignments
+  - wk_assignments_by_id
+  - wk_assignments_start
+
+- title: "Subjects"
+  desc: >
+    Functions for accessing radicals, kanji, and vocabulary
+  contents:
+  - wk_subjects
+  - wk_subjects_by_id
+
+- title: "Reviews"
+  desc: >
+    Functions for accessing and creating reviews
+  contents:
+  - wk_reviews
+  - wk_reviews_by_id
+  - wk_reviews_create
+
+- title: "Review Statistics"
+  desc: >
+    Functions for accessing performance statistics
+  contents:
+  - wk_review_statistics
+  - wk_review_statistics_by_id
+
+- title: "Study Materials"
+  desc: >
+    Functions for managing custom notes and synonyms
+  contents:
+  - wk_study_materials
+  - wk_study_materials_by_id
+  - wk_study_materials_create
+  - wk_study_materials_update
+
+- title: "Level Progressions"
+  desc: >
+    Functions for tracking level progress
+  contents:
+  - wk_level_progressions
+  - wk_level_progressions_by_id
+
+- title: "Resets"
+  desc: >
+    Functions for accessing reset history
+  contents:
+  - wk_resets
+  - wk_resets_by_id
+
+- title: "Spaced Repetition Systems"
+  desc: >
+    Functions for accessing SRS information
+  contents:
+  - wk_spaced_repetition_systems
+  - wk_spaced_repetition_systems_by_id
+
+- title: "Voice Actors"
+  desc: >
+    Functions for accessing voice actor information
+  contents:
+  - wk_voice_actors
+  - wk_voice_actors_by_id
+
+- title: "Pagination Helpers"
+  desc: >
+    Utility functions for handling paginated API responses
+  contents:
+  - wk_fetch_all_pages
+  - wk_extract_data
+  - wk_next_page_url
+  - wk_has_next_page
+
+articles:
+- title: "Getting Started"
+  navbar: ~
+  contents:
+  - getting-started
+  - getting-started-targets
+
+- title: "Advanced Topics"
+  navbar: ~
+  contents:
+  - targets-pipeline-visualization
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with
+  components:
+    developed_by: |
+      Developed by [John Gavin](https://github.com/JohnGavin)
+    built_with: |
+      Built with [pkgdown](https://pkgdown.r-lib.org/) and
+      [Claude Code](https://claude.com/claude-code)
+
+development:
+  mode: auto
+  version_label: default
+  version_tooltip: "Version"

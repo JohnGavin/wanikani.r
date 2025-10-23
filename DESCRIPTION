@@ -26,7 +26,8 @@ Suggests:
     ggplot2,
     dplyr,
     tidyr,
-    visNetwork
+    visNetwork,
+    pkgdown
 VignetteBuilder: knitr
-URL: https://github.com/yourusername/wanikani.r, https://docs.api.wanikani.com/
-BugReports: https://github.com/yourusername/wanikani.r/issues
+URL: https://johngavin.github.io/wanikani.r/, https://github.com/JohnGavin/wanikani.r, https://docs.api.wanikani.com/
+BugReports: https://github.com/JohnGavin/wanikani.r/issues

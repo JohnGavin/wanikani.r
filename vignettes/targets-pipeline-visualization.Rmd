@@ -31,15 +31,35 @@ This vignette provides comprehensive visualization and diagnostics of the `targe
 ## Setup
 
 ```{r setup}
-library(targets)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
+# Check for required packages
+has_targets <- requireNamespace("targets", quietly = TRUE)
+has_dplyr <- requireNamespace("dplyr", quietly = TRUE)
+has_tidyr <- requireNamespace("tidyr", quietly = TRUE)
+has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
+
+if (!has_targets) {
+  message("This vignette requires the 'targets' package.")
+  message("Install with: install.packages('targets')")
+  knitr::opts_chunk$set(eval = FALSE)
+}
+
+if (has_targets) {
+  library(targets)
+}
+if (has_dplyr) {
+  library(dplyr)
+}
+if (has_tidyr) {
+  library(tidyr)
+}
+if (has_ggplot2) {
+  library(ggplot2)
+}
 
 # Check if pipeline has been run
-pipeline_exists <- file.exists("_targets/meta/meta")
+pipeline_exists <- has_targets && file.exists("_targets/meta/meta")
 
-if (!pipeline_exists) {
+if (has_targets && !pipeline_exists) {
   message("Pipeline has not been run yet. Run targets::tar_make() first.")
   message("For this vignette, we'll show the expected structure.")
 }
@@ -309,7 +329,7 @@ if (pipeline_exists) {
 
   if (any(warnings_present)) {
     cat("⚠ Warnings detected in the following targets:\n")
-    for (i which(warnings_present)) {
+    for (i in which(warnings_present)) {
       cat(sprintf("\n%s:\n", meta_full$name[i]))
       cat(paste("  ", meta_full$warnings[[i]], collapse = "\n"))
     }
