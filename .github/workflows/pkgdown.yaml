@@ -67,13 +67,11 @@ jobs:
                       ];
                     }' \
             --run 'R -e "
-            # Install package (dependencies already in Nix environment)
-            devtools::install(dependencies = FALSE, upgrade = \"never\")
-
-            # Build site
+            # Build site directly without installing
+            # (all dependencies already in Nix environment)
             pkgdown::build_site_github_pages(
               new_process = FALSE,
-              install = FALSE,
+              install = TRUE,
               examples = TRUE
             )
             "'
