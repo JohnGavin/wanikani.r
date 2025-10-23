@@ -32,6 +32,8 @@ This vignette provides comprehensive visualization and diagnostics of the `targe
 
 ```{r setup}
 library(targets)
+library(dplyr)
+library(tidyr)
 library(ggplot2)
 
 # Check if pipeline has been run
@@ -93,13 +95,17 @@ if (pipeline_exists) {
 meta <- targets::tar_meta(fields = c("name", "time", "bytes", "seconds"))
 
 if (nrow(meta) > 0) {
-  # Convert to data frame for plotting
-  meta_df <- as.data.frame(meta)
-  meta_df$seconds <- as.numeric(meta_df$seconds)
-  meta_df$time_formatted <- format(meta_df$time, "%Y-%m-%d %H:%M:%S")
+  # Convert to data frame using tidyverse
+  meta_df <- meta %>%
+    as.data.frame() %>%
+    mutate(
+      seconds = as.numeric(seconds),
+      time_formatted = format(time, "%Y-%m-%d %H:%M:%S")
+    )
 
   # Plot build times
-  ggplot(meta_df, aes(x = reorder(name, seconds), y = seconds)) +
+  meta_df %>%
+    ggplot(aes(x = reorder(name, seconds), y = seconds)) +
     geom_col(fill = "steelblue") +
     coord_flip() +
     labs(
@@ -120,16 +126,27 @@ if (nrow(meta) > 0) {
 
 ```{r time-stats, eval=pipeline_exists}
 if (pipeline_exists && nrow(meta) > 0) {
-  time_stats <- data.frame(
+  # Use tidyverse to calculate statistics
+  time_summary <- meta_df %>%
+    summarise(
+      total = sum(seconds, na.rm = TRUE),
+      mean = mean(seconds, na.rm = TRUE),
+      median = median(seconds, na.rm = TRUE),
+      max_val = max(seconds, na.rm = TRUE),
+      min_val = min(seconds, na.rm = TRUE)
+    )
+
+  max_target <- meta_df %>% slice_max(seconds, n = 1) %>% pull(name)
+  min_target <- meta_df %>% slice_min(seconds, n = 1) %>% pull(name)
+
+  time_stats <- tibble(
     Metric = c("Total Time", "Mean Time", "Median Time", "Max Time", "Min Time"),
     Value = c(
-      sprintf("%.2f seconds", sum(meta_df$seconds, na.rm = TRUE)),
-      sprintf("%.2f seconds", mean(meta_df$seconds, na.rm = TRUE)),
-      sprintf("%.2f seconds", median(meta_df$seconds, na.rm = TRUE)),
-      sprintf("%.2f seconds (%s)", max(meta_df$seconds, na.rm = TRUE),
-              meta_df$name[which.max(meta_df$seconds)]),
-      sprintf("%.2f seconds (%s)", min(meta_df$seconds, na.rm = TRUE),
-              meta_df$name[which.min(meta_df$seconds)])
+      sprintf("%.2f seconds", time_summary$total),
+      sprintf("%.2f seconds", time_summary$mean),
+      sprintf("%.2f seconds", time_summary$median),
+      sprintf("%.2f seconds (%s)", time_summary$max_val, max_target),
+      sprintf("%.2f seconds (%s)", time_summary$min_val, min_target)
     )
   )
 
@@ -148,11 +165,13 @@ if (pipeline_exists && nrow(meta) > 0) {
 
 ```{r memory-usage, eval=pipeline_exists, fig.height=5}
 if (pipeline_exists && nrow(meta) > 0) {
-  # Convert bytes to MB
-  meta_df$mb <- meta_df$bytes / (1024^2)
+  # Convert bytes to MB using tidyverse
+  meta_df <- meta_df %>%
+    mutate(mb = bytes / (1024^2))
 
   # Plot memory usage
-  ggplot(meta_df, aes(x = reorder(name, mb), y = mb)) +
+  meta_df %>%
+    ggplot(aes(x = reorder(name, mb), y = mb)) +
     geom_col(fill = "coral") +
     coord_flip() +
     labs(

@@ -24,6 +24,8 @@ Suggests:
     knitr,
     rmarkdown,
     ggplot2,
+    dplyr,
+    tidyr,
     visNetwork
 VignetteBuilder: knitr
 URL: https://github.com/yourusername/wanikani.r, https://docs.api.wanikani.com/

@@ -6,7 +6,7 @@ library(tarchetypes)
 
 # Set target-specific options
 tar_option_set(
-  packages = c("wanikani", "httr", "jsonlite"),
+  packages = character(0),  # No packages needed for mock data
   format = "rds",
   memory = "transient",
   garbage_collection = TRUE
