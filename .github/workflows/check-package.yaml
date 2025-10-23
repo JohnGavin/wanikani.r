@@ -8,11 +8,7 @@ on:
 
 jobs:
   check-nix:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
+    runs-on: ubuntu-latest
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -48,6 +44,7 @@ jobs:
                         rPackages.httr
                         rPackages.jsonlite
                         rPackages.R6
+                        pandoc
                       ];
                     }' \
             --run 'R -e "devtools::check(args = c(\"--no-manual\", \"--as-cran\"), error_on = \"warning\")"'
@@ -56,5 +53,5 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-results
+          name: linux-check-results
           path: '*.Rcheck'

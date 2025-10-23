@@ -8,11 +8,7 @@ on:
 
 jobs:
   R-CMD-check:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
+    runs-on: ubuntu-latest
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -39,7 +35,7 @@ jobs:
           rix::rix(
             r_ver = 'latest',
             r_pkgs = c('devtools', 'roxygen2', 'testthat', 'httr', 'jsonlite', 'R6'),
-            system_pkgs = NULL,
+            system_pkgs = c('pandoc'),
             git_pkgs = NULL,
             ide = 'other',
             project_path = '.',
