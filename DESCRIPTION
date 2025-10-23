@@ -18,6 +18,11 @@ Imports:
 Suggests:
     testthat (>= 3.0.0),
     httptest (>= 4.0.0),
-    covr
+    covr,
+    targets,
+    tarchetypes,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
 URL: https://github.com/yourusername/wanikani.r, https://docs.api.wanikani.com/
 BugReports: https://github.com/yourusername/wanikani.r/issues

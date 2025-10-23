@@ -1,0 +1,85 @@
+name: R-CMD-check via Nix
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  R-CMD-check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixpkgs-unstable
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v14
+        with:
+          name: rstats-on-nix
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Create Nix environment with rix
+        run: |
+          nix-shell -p R rPackages.rix --run "R -e \"
+          rix::rix(
+            r_ver = 'latest',
+            r_pkgs = c('devtools', 'roxygen2', 'testthat', 'httr', 'jsonlite', 'R6'),
+            system_pkgs = NULL,
+            git_pkgs = NULL,
+            ide = 'other',
+            project_path = '.',
+            overwrite = TRUE,
+            print = TRUE
+          )
+          \""
+
+      - name: Build Nix environment
+        run: nix-build
+
+      - name: Check package with devtools
+        run: |
+          nix-shell --run "R -e \"
+          # Set up environment
+          Sys.setenv(NOT_CRAN = 'true')
+
+          # Load devtools
+          library(devtools)
+
+          # Show session info
+          sessionInfo()
+
+          # Generate documentation
+          document()
+
+          # Run tests
+          test(stop_on_failure = TRUE)
+
+          # Run R CMD check
+          check(
+            args = c('--no-manual', '--as-cran'),
+            error_on = 'warning'
+          )
+          \""
+
+      - name: Show check results
+        if: always()
+        run: |
+          if [ -d "*.Rcheck" ]; then
+            cat *.Rcheck/00check.log
+            cat *.Rcheck/00install.out
+          fi

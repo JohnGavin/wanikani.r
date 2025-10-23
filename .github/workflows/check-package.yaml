@@ -1,0 +1,60 @@
+name: Check Package via Nix
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  check-nix:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v14
+        with:
+          name: rstats-on-nix
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Create .Renviron with GitHub PAT
+        run: |
+          mkdir -p ~/.config/R
+          echo "GITHUB_PAT=${{ secrets.GITHUB_TOKEN }}" >> ~/.Renviron
+
+      - name: Run R CMD check via Nix
+        run: |
+          nix-shell \
+            --expr 'with import <nixpkgs> {};
+                    mkShell {
+                      buildInputs = [
+                        R
+                        rPackages.devtools
+                        rPackages.roxygen2
+                        rPackages.testthat
+                        rPackages.httr
+                        rPackages.jsonlite
+                        rPackages.R6
+                      ];
+                    }' \
+            --run 'R -e "devtools::check(args = c(\"--no-manual\", \"--as-cran\"), error_on = \"warning\")"'
+
+      - name: Upload check results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-results
+          path: '*.Rcheck'

@@ -6,3 +6,6 @@
 .httr-oauth
 .DS_Store
 inst/doc
+_targets/
+*.Rcheck
+*.tar.gz

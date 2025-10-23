@@ -19,3 +19,6 @@
 ^GITHUB_SUBMISSION\.md$
 ^gh_submit\.R$
 ^gh_submit_simple\.sh$
+^_targets\.R$
+^_targets$
+^\.github$

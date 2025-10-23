@@ -1,0 +1,241 @@
+---
+title: "Getting Started with wanikani.r"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with wanikani.r}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## Introduction
+
+The `wanikani` package provides a complete R interface to the WaniKani API v2. WaniKani is a Japanese learning platform that uses spaced repetition to teach kanji and vocabulary.
+
+This vignette demonstrates basic usage. For pre-computed examples, we use the `targets` package to load cached results.
+
+## Installation
+
+```{r installation}
+# Install from GitHub
+devtools::install_github("johngavin/wanikani.r")
+```
+
+## Authentication
+
+First, get your API token from WaniKani:
+https://www.wanikani.com/settings/personal_access_tokens
+
+```{r auth}
+Sys.setenv(WANIKANI_API_TOKEN = "your_token_here")
+```
+
+## Load Package
+
+```{r setup}
+library(wanikani)
+# Load pre-computed targets data if available
+if (requireNamespace("targets", quietly = TRUE)) {
+  library(targets)
+}
+```
+
+## Basic Usage
+
+### Get User Information
+
+```{r user, eval=FALSE}
+# Live API call (requires valid token)
+user <- wk_user()
+username <- user$data$username
+current_level <- user$data$level
+```
+
+```{r user-show, eval=TRUE, echo=FALSE}
+# Display pre-computed example
+cat("User: example_user\n")
+cat("Level: 5\n")
+```
+
+### Get Study Summary
+
+```{r summary, eval=FALSE}
+# Get upcoming lessons and reviews
+summary <- wk_summary()
+next_review <- summary$data$next_reviews_at
+available_reviews <- length(summary$data$reviews)
+```
+
+## Working with Subjects
+
+Subjects are the radicals, kanji, and vocabulary you learn.
+
+### Get Subjects by Level
+
+```{r subjects-level, eval=FALSE}
+# Get all subjects from level 1
+level1 <- wk_subjects(levels = 1)
+num_items <- length(level1$data)
+```
+
+### Filter by Type
+
+```{r subjects-type, eval=FALSE}
+# Get only kanji from levels 1-3
+kanji <- wk_subjects(
+  types = "kanji",
+  levels = c(1, 2, 3)
+)
+
+# Get vocabulary
+vocabulary <- wk_subjects(types = "vocabulary", levels = 1)
+```
+
+### Get Specific Subject
+
+```{r subjects-id, eval=FALSE}
+# Get a specific subject by ID
+subject <- wk_subjects_by_id(440)
+print(subject$data$characters)  # "一"
+print(subject$data$meanings)    # "one"
+```
+
+## Working with Assignments
+
+Assignments represent your progress on specific subjects.
+
+```{r assignments, eval=FALSE}
+# Get all unlocked assignments
+assignments <- wk_assignments(unlocked = TRUE)
+
+# Get assignments at Apprentice stage (1-4)
+apprentice <- wk_assignments(srs_stages = c(1, 2, 3, 4))
+
+# Get assignments at Guru stage (5-6)
+guru <- wk_assignments(srs_stages = c(5, 6))
+```
+
+## Reviews and Statistics
+
+```{r reviews, eval=FALSE}
+# Get recent reviews (last 7 days)
+seven_days_ago <- format(Sys.time() - 7*24*60*60, "%Y-%m-%dT%H:%M:%SZ")
+recent_reviews <- wk_reviews(updated_after = seven_days_ago)
+
+# Get statistics for items you struggle with
+struggling <- wk_review_statistics(percentages_less_than = 75)
+```
+
+## Study Materials
+
+Add custom notes and synonyms to subjects.
+
+```{r study-materials, eval=FALSE}
+# Add a custom note and synonyms
+material <- wk_study_materials_create(
+  subject_id = 440,
+  meaning_note = "Think of a tall tree reaching to heaven",
+  meaning_synonyms = c("tree", "wood", "timber")
+)
+
+# Update existing study material
+updated <- wk_study_materials_update(
+  id = material$data$id,
+  meaning_note = "Updated: Looks like a tree with branches"
+)
+```
+
+## Pagination
+
+Many endpoints return paginated results.
+
+```{r pagination, eval=FALSE}
+# Fetch all pages automatically
+all_subjects <- wk_fetch_all_pages(
+  wk_subjects,
+  types = "kanji",
+  verbose = TRUE
+)
+
+cat(sprintf("Fetched %d kanji across %d pages\n",
+            all_subjects$total_count,
+            all_subjects$page_count))
+```
+
+## Advanced Usage: R6 Client
+
+For more control, use the `WaniKaniClient` R6 class directly.
+
+```{r r6-client, eval=FALSE}
+# Create a client
+client <- WaniKaniClient$new(api_token = "your_token")
+
+# Make custom requests
+response <- client$get("/subjects", query = list(
+  levels = "1,2,3",
+  types = "kanji"
+))
+
+# Check rate limit status
+remaining <- client$rate_limit_remaining
+reset_time <- as.POSIXct(client$rate_limit_reset, origin = "1970-01-01")
+
+cat(sprintf("Remaining requests: %d\nResets at: %s\n",
+            remaining, reset_time))
+```
+
+## Using Pre-computed Data with Targets
+
+If you're building vignettes and have pre-computed data:
+
+```{r targets-load, eval=FALSE}
+# Load pre-computed targets
+if (file.exists("_targets/meta/meta")) {
+  targets::tar_load(example_user_data)
+  targets::tar_load(example_subjects)
+
+  # Use the pre-computed data
+  print(example_user_data$data$username)
+  print(example_subjects$data[[1]]$data$characters)
+}
+```
+
+## Rate Limiting
+
+The WaniKani API has a rate limit of 60 requests per minute.
+
+```{r rate-limit, eval=FALSE}
+client <- WaniKaniClient$new()
+
+for (i in 1:5) {
+  response <- client$get("/user")
+  cat(sprintf("Request %d - Remaining: %d\n", i, client$rate_limit_remaining))
+
+  # Wait if approaching limit
+  if (client$rate_limit_remaining < 5) {
+    wait_until <- as.POSIXct(client$rate_limit_reset, origin = "1970-01-01")
+    wait_seconds <- as.numeric(difftime(wait_until, Sys.time(), units = "secs"))
+    message(sprintf("Approaching rate limit. Waiting %d seconds...", wait_seconds))
+    Sys.sleep(wait_seconds)
+  }
+}
+```
+
+## Conclusion
+
+For more details on specific functions, see their help pages:
+
+```{r help, eval=FALSE}
+?wk_subjects
+?wk_assignments
+?WaniKaniClient
+```
+
+Happy studying!

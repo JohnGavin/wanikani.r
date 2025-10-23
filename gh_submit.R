@@ -183,7 +183,3 @@ cat("   - GitHub Actions for CI/CD\n")
 cat("   - Code coverage badges\n")
 cat("   - CRAN submission (optional)\n\n")
 
-cat("To update the repository in the future:\n")
-cat("  git add -A\n")
-cat("  git commit -m 'Your changes'\n")
-cat("  git push\n\n")
