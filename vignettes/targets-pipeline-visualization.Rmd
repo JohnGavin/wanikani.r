@@ -13,34 +13,11 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-# Check if targets is available
+# Check if targets is available and if pipeline exists
 has_targets <- requireNamespace("targets", quietly = TRUE)
+pipeline_exists <- has_targets && file.exists("_targets/meta/meta")
 
-# Exit early if targets not available
-if (!has_targets) {
-  knitr::opts_chunk$set(
-    collapse = TRUE,
-    comment = "#>",
-    eval = FALSE
-  )
-  knitr::knit_exit()
-}
-
-# Load targets only if available
-library(targets)
-
-# Check if pipeline exists
-pipeline_exists <- file.exists("_targets/meta/meta")
-if (!pipeline_exists) {
-  knitr::opts_chunk$set(
-    collapse = TRUE,
-    comment = "#>",
-    eval = FALSE
-  )
-  knitr::knit_exit()
-}
-
-# Set chunk options for normal execution
+# Set evaluation based on availability
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -49,8 +26,21 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
   echo = TRUE,  # Show code with hide/show toggle
-  eval = TRUE
+  eval = pipeline_exists  # Only evaluate if both targets and pipeline exist
 )
+
+# Load targets only if available
+# Note: library() only executes if targets was found by requireNamespace()
+if (has_targets && pipeline_exists) {
+  library(targets)
+}
+
+# Exit early if prerequisites not met
+if (!pipeline_exists) {
+  message("Note: This vignette requires the targets package and a built targets pipeline.")
+  message("Run targets::tar_make() to build the pipeline before viewing this vignette.")
+  knitr::knit_exit()
+}
 ```
 
 ## Introduction
