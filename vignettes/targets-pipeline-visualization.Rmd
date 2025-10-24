@@ -12,15 +12,9 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE, error = TRUE}
-# Check if targets is available - if not, skip all chunk evaluation
-has_targets <- requireNamespace("targets", quietly = TRUE) &&
-               requireNamespace("dplyr", quietly = TRUE) &&
-               requireNamespace("tidyr", quietly = TRUE) &&
-               requireNamespace("ggplot2", quietly = TRUE)
-
-# Set pipeline_exists to FALSE by default
-pipeline_exists <- FALSE
+```{r setup, include = FALSE}
+# Check if targets is available
+has_targets <- requireNamespace("targets", quietly = TRUE)
 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -29,231 +23,103 @@ knitr::opts_chunk$set(
   fig.height = 6,
   warning = FALSE,
   message = FALSE,
-  echo = FALSE,  # Hide code by default
-  eval = FALSE   # Default to not evaluating chunks
+  echo = TRUE,  # Show code with hide/show toggle
+  eval = has_targets  # Only evaluate if targets available
 )
 
-# Early exit if packages not available - MUST be before any library() calls
+# Exit early if targets not available
 if (!has_targets) {
   knitr::knit_exit()
-} else {
-  # Only load libraries if we have the packages
-  suppressPackageStartupMessages({
-    library(targets)
-    library(dplyr)
-    library(tidyr)
-    library(ggplot2)
-  })
+}
 
-  # Check if pipeline has been run
-  pipeline_exists <- file.exists("_targets/meta/meta")
+library(targets)
 
-  # Enable evaluation for chunks that should run
-  knitr::opts_chunk$set(eval = pipeline_exists)
+# Check if pipeline exists
+pipeline_exists <- file.exists("_targets/meta/meta")
+if (!pipeline_exists) {
+  knitr::knit_exit()
 }
 ```
 
 ## Introduction
 
-This vignette provides comprehensive visualization and diagnostics of the `targets` pipeline used to pre-compute data for the wanikani package vignettes. It demonstrates:
-
-- Pipeline structure and dependencies
-- Build times and performance metrics
-- Memory usage statistics
-- Target status and metadata
-- Session information
-
-## Setup
-
-```{r setup, eval=pipeline_exists, echo=FALSE}
-# Pipeline is ready - targets loaded and data available
-message("Pipeline loaded successfully")
-```
-
-## Pipeline Structure
-
-### Dependency Graph
-
-The targets pipeline shows the relationships between different data objects:
-
-```{r network-plot, eval=pipeline_exists, fig.height=7}
-# Interactive network visualization
-if (requireNamespace("visNetwork", quietly = TRUE)) {
-  targets::tar_visnetwork(
-    targets_only = TRUE,
-    label = c("time", "size", "branches")
-  )
-} else {
-  message("Install visNetwork for interactive pipeline visualization:")
-  message("install.packages('visNetwork')")
-}
-```
-
-### Static Dependency Graph
-
-```{r glimpse-plot, eval=pipeline_exists}
-# Static visualization
-targets::tar_glimpse()
-```
-
-### Target Manifest
-
-Complete list of all targets in the pipeline:
-
-```{r manifest}
-if (pipeline_exists) {
-  manifest <- targets::tar_manifest()
-  knitr::kable(
-    manifest,
-    caption = "Pipeline Manifest: All Targets",
-    format = "markdown"
-  )
-}
-```
+This vignette provides comprehensive visualization and diagnostics of the `targets` pipeline used to pre-compute data for the wanikani package vignettes. All visualizations shown below are generated from pre-computed targets, demonstrating how `targets` can be used to cache expensive computations and improve vignette build times.
 
 ## Performance Metrics
 
 ### Build Time Analysis
 
-```{r build-times, eval=pipeline_exists, fig.height=5}
-# Get build time metadata
-meta <- targets::tar_meta(fields = c("name", "time", "bytes", "seconds"))
+This section shows how long each target took to build, helping identify performance bottlenecks in the pipeline.
 
-if (nrow(meta) > 0) {
-  # Convert to data frame using tidyverse
-  meta_df <- meta %>%
-    as.data.frame() %>%
-    mutate(
-      seconds = as.numeric(seconds),
-      time_formatted = format(time, "%Y-%m-%d %H:%M:%S")
-    )
-
-  # Plot build times
-  meta_df %>%
-    ggplot(aes(x = reorder(name, seconds), y = seconds)) +
-    geom_col(fill = "steelblue") +
-    coord_flip() +
-    labs(
-      title = "Target Build Times",
-      subtitle = "Time taken to build each target",
-      x = "Target Name",
-      y = "Time (seconds)"
-    ) +
-    theme_minimal() +
-    theme(
-      plot.title = element_text(face = "bold", size = 14),
-      axis.text.y = element_text(size = 10)
-    )
-}
+```{r build-times-plot, fig.height=5, fig.cap="**Figure 1**: Build time for each target in the pipeline. Longer bars indicate targets that take more time to compute."}
+# Load the pre-computed plot from targets
+plot_build_times <- tar_read(plot_build_times)
+print(plot_build_times)
 ```
 
-### Build Time Statistics
+The build times table below provides detailed statistics about target execution times:
 
-```{r time-stats, eval=pipeline_exists}
-if (pipeline_exists && nrow(meta) > 0) {
-  # Use tidyverse to calculate statistics
-  time_summary <- meta_df %>%
-    summarise(
-      total = sum(seconds, na.rm = TRUE),
-      mean = mean(seconds, na.rm = TRUE),
-      median = median(seconds, na.rm = TRUE),
-      max_val = max(seconds, na.rm = TRUE),
-      min_val = min(seconds, na.rm = TRUE)
-    )
-
-  max_target <- meta_df %>% slice_max(seconds, n = 1) %>% pull(name)
-  min_target <- meta_df %>% slice_min(seconds, n = 1) %>% pull(name)
-
-  time_stats <- tibble(
-    Metric = c("Total Time", "Mean Time", "Median Time", "Max Time", "Min Time"),
-    Value = c(
-      sprintf("%.2f seconds", time_summary$total),
-      sprintf("%.2f seconds", time_summary$mean),
-      sprintf("%.2f seconds", time_summary$median),
-      sprintf("%.2f seconds (%s)", time_summary$max_val, max_target),
-      sprintf("%.2f seconds (%s)", time_summary$min_val, min_target)
-    )
-  )
-
-  knitr::kable(
-    time_stats,
-    caption = "Build Time Statistics",
-    format = "markdown",
-    align = c("l", "r")
-  )
-}
+```{r build-times-table}
+# Load the pre-computed table from targets
+time_stats <- tar_read(table_time_stats)
+knitr::kable(
+  time_stats,
+  caption = "**Table 1**: Summary statistics of build times across all targets",
+  align = c("l", "r")
+)
 ```
 
-## Memory Usage
+### Memory Usage Analysis
 
-### Memory by Target
+Understanding memory usage helps optimize the pipeline and identify targets that consume significant resources.
 
-```{r memory-usage, eval=pipeline_exists, fig.height=5}
-if (pipeline_exists && nrow(meta) > 0) {
-  # Convert bytes to MB using tidyverse
-  meta_df <- meta_df %>%
-    mutate(mb = bytes / (1024^2))
-
-  # Plot memory usage
-  meta_df %>%
-    ggplot(aes(x = reorder(name, mb), y = mb)) +
-    geom_col(fill = "coral") +
-    coord_flip() +
-    labs(
-      title = "Target Memory Usage",
-      subtitle = "Size of each target in memory",
-      x = "Target Name",
-      y = "Size (MB)"
-    ) +
-    theme_minimal() +
-    theme(
-      plot.title = element_text(face = "bold", size = 14),
-      axis.text.y = element_text(size = 10)
-    )
-}
+```{r memory-plot, fig.height=5, fig.cap="**Figure 2**: Memory footprint of each target. Targets with larger memory usage may benefit from data reduction or alternative storage formats."}
+# Load the pre-computed memory plot
+plot_memory <- tar_read(plot_memory_usage)
+print(plot_memory)
 ```
 
-### Memory Statistics
+Detailed memory statistics show the distribution of resource usage across targets:
 
-```{r memory-stats, eval=pipeline_exists}
-if (pipeline_exists && nrow(meta) > 0) {
-  memory_stats <- data.frame(
-    Metric = c("Total Size", "Mean Size", "Median Size", "Largest", "Smallest"),
-    Value = c(
-      sprintf("%.2f MB", sum(meta_df$mb, na.rm = TRUE)),
-      sprintf("%.2f MB", mean(meta_df$mb, na.rm = TRUE)),
-      sprintf("%.2f MB", median(meta_df$mb, na.rm = TRUE)),
-      sprintf("%.2f MB (%s)", max(meta_df$mb, na.rm = TRUE),
-              meta_df$name[which.max(meta_df$mb)]),
-      sprintf("%.2f MB (%s)", min(meta_df$mb, na.rm = TRUE),
-              meta_df$name[which.min(meta_df$mb)])
-    )
-  )
-
-  knitr::kable(
-    memory_stats,
-    caption = "Memory Usage Statistics",
-    format = "markdown",
-    align = c("l", "r")
-  )
-}
+```{r memory-table}
+# Load the pre-computed memory statistics table
+memory_stats <- tar_read(table_memory_stats)
+knitr::kable(
+  memory_stats,
+  caption = "**Table 2**: Memory usage statistics showing total, mean, median, largest, and smallest targets",
+  align = c("l", "r")
+)
 ```
 
-### Memory vs. Build Time
+## Pipeline Structure
 
-```{r memory-time-scatter, eval=pipeline_exists, fig.height=5}
-if (pipeline_exists && nrow(meta) > 0) {
-  ggplot(meta_df, aes(x = seconds, y = mb)) +
-    geom_point(size = 3, color = "darkgreen", alpha = 0.7) +
-    geom_text(aes(label = name), vjust = -0.5, size = 3) +
-    labs(
-      title = "Memory Usage vs Build Time",
-      subtitle = "Relationship between target size and build duration",
-      x = "Build Time (seconds)",
-      y = "Memory (MB)"
-    ) +
-    theme_minimal() +
-    theme(plot.title = element_text(face = "bold", size = 14))
+### Target Manifest
+
+The target manifest shows all targets in the pipeline along with their commands, providing a complete overview of what the pipeline computes.
+
+```{r manifest-table}
+# Load the target manifest
+manifest <- tar_read(table_manifest)
+knitr::kable(
+  manifest,
+  caption = "**Table 3**: Complete manifest of all targets showing their names and computation commands",
+  format = "markdown"
+)
+```
+
+### Dependency Graph
+
+The dependency graph visualizes relationships between targets, showing which targets depend on others and helping identify potential parallelization opportunities.
+
+```{r dependency-graph, eval=pipeline_exists}
+# Generate interactive dependency visualization
+if (requireNamespace("visNetwork", quietly = TRUE)) {
+  targets::tar_visnetwork(
+    targets_only = TRUE,
+    label = c("time", "size")
+  )
+} else {
+  message("Install 'visNetwork' for interactive pipeline visualization")
 }
 ```
 
@@ -261,372 +127,127 @@ if (pipeline_exists && nrow(meta) > 0) {
 
 ### Target Progress
 
-```{r progress, eval=pipeline_exists}
-if (pipeline_exists) {
-  progress <- targets::tar_progress()
+This section shows the current status of all targets in the pipeline, indicating which are up-to-date and which need rebuilding.
 
-  if (nrow(progress) > 0) {
-    # Summary of target status
-    status_summary <- table(progress$progress)
+```{r progress-status}
+progress <- tar_progress()
 
-    status_df <- data.frame(
-      Status = names(status_summary),
-      Count = as.integer(status_summary)
-    )
+if (nrow(progress) > 0) {
+  status_summary <- table(progress$progress)
+  status_df <- data.frame(
+    Status = names(status_summary),
+    Count = as.integer(status_summary)
+  )
 
-    knitr::kable(
-      status_df,
-      caption = "Target Status Summary",
-      format = "markdown",
-      col.names = c("Status", "Number of Targets")
-    )
-  }
+  knitr::kable(
+    status_df,
+    caption = "**Table 4**: Current status of targets showing how many are built, outdated, or errored",
+    col.names = c("Status", "Number of Targets")
+  )
 }
 ```
 
 ### Outdated Targets
 
-```{r outdated, eval=pipeline_exists}
-if (pipeline_exists) {
-  outdated <- targets::tar_outdated()
+Checking for outdated targets helps maintain pipeline freshness:
 
-  if (length(outdated) > 0) {
-    cat("The following targets are outdated and need rebuilding:\n")
-    cat(paste("-", outdated, collapse = "\n"))
-  } else {
-    cat("✓ All targets are up to date!\n")
+```{r outdated-check}
+outdated <- tar_outdated()
+
+if (length(outdated) > 0) {
+  cat("⚠ **Outdated targets** (need rebuilding):\n\n")
+  for (target in outdated) {
+    cat(sprintf("- `%s`\n", target))
   }
-}
-```
-
-## Target Metadata
-
-### Complete Metadata Table
-
-```{r metadata-table, eval=pipeline_exists}
-if (pipeline_exists && nrow(meta) > 0) {
-  # Create readable metadata table
-  meta_table <- data.frame(
-    Target = meta_df$name,
-    `Build Time` = sprintf("%.3f sec", meta_df$seconds),
-    `Size` = sprintf("%.2f MB", meta_df$mb),
-    `Last Built` = meta_df$time_formatted,
-    stringsAsFactors = FALSE
-  )
-
-  knitr::kable(
-    meta_table,
-    caption = "Complete Target Metadata",
-    format = "markdown",
-    align = c("l", "r", "r", "l")
-  )
-}
-```
-
-### Warnings and Errors
-
-```{r warnings-errors, eval=pipeline_exists}
-if (pipeline_exists) {
-  meta_full <- targets::tar_meta(fields = c("name", "warnings", "error"))
-
-  # Check for warnings
-  warnings_present <- sapply(meta_full$warnings, function(x) !is.null(x) && length(x) > 0)
-
-  if (any(warnings_present)) {
-    cat("⚠ Warnings detected in the following targets:\n")
-    for (i in which(warnings_present)) {
-      cat(sprintf("\n%s:\n", meta_full$name[i]))
-      cat(paste("  ", meta_full$warnings[[i]], collapse = "\n"))
-    }
-  } else {
-    cat("✓ No warnings in any targets\n")
-  }
-
-  # Check for errors
-  errors_present <- sapply(meta_full$error, function(x) !is.null(x) && nchar(x) > 0)
-
-  if (any(errors_present)) {
-    cat("\n\n❌ Errors detected in the following targets:\n")
-    for (i in which(errors_present)) {
-      cat(sprintf("\n%s:\n", meta_full$name[i]))
-      cat(paste("  ", meta_full$error[i]))
-    }
-  } else {
-    cat("\n✓ No errors in any targets\n")
-  }
-}
-```
-
-## Dependency Analysis
-
-### Target Dependencies
-
-```{r dependencies, eval=pipeline_exists}
-if (pipeline_exists) {
-  # Get network data
-  network <- targets::tar_network(targets_only = TRUE)
-
-  if (!is.null(network$edges) && nrow(network$edges) > 0) {
-    # Create dependency table
-    deps_table <- data.frame(
-      From = network$edges$from,
-      To = network$edges$to,
-      stringsAsFactors = FALSE
-    )
-
-    knitr::kable(
-      deps_table,
-      caption = "Target Dependencies",
-      format = "markdown"
-    )
-  } else {
-    cat("No dependencies between targets (all independent)\n")
-  }
-}
-```
-
-### Dependency Depth
-
-```{r dep-depth, eval=pipeline_exists, fig.height=4}
-if (pipeline_exists) {
-  # Calculate dependency depth for each target
-  network <- targets::tar_network(targets_only = TRUE)
-
-  if (!is.null(network$vertices) && nrow(network$vertices) > 0) {
-    depth_df <- data.frame(
-      target = network$vertices$name,
-      depth = network$vertices$level
-    )
-
-    ggplot(depth_df, aes(x = factor(depth), fill = factor(depth))) +
-      geom_bar() +
-      labs(
-        title = "Pipeline Depth Distribution",
-        subtitle = "Number of targets at each dependency level",
-        x = "Dependency Level",
-        y = "Number of Targets"
-      ) +
-      scale_fill_brewer(palette = "Set3") +
-      theme_minimal() +
-      theme(
-        plot.title = element_text(face = "bold", size = 14),
-        legend.position = "none"
-      )
-  }
+} else {
+  cat("✓ **All targets are up to date!**\n")
 }
 ```
 
 ## System Information
 
-### R Session Info
+### Pipeline Metadata
 
-```{r session-info}
-# Get session information
-sess_info <- sessionInfo()
+Pipeline metadata provides information about the environment in which targets were built:
 
-# Create formatted output
-cat("R Version:", sess_info$R.version$version.string, "\n")
-cat("Platform:", sess_info$platform, "\n")
-cat("Running under:", sess_info$running, "\n\n")
+```{r pipeline-info}
+# Load pipeline metadata
+metadata <- tar_read(pipeline_metadata)
 
-cat("Locale:\n")
-cat(" ", sess_info$locale, "\n\n")
-
-cat("Loaded Packages:\n")
-loaded_pkgs <- sess_info$loadedOnly
-if (length(loaded_pkgs) > 0) {
-  for (pkg_name in names(loaded_pkgs)) {
-    pkg <- loaded_pkgs[[pkg_name]]
-    cat(sprintf("  %s %s\n", pkg_name, pkg$Version))
-  }
-}
-```
-
-### Package Versions Table
-
-```{r package-versions}
-# Key packages for this pipeline
-key_packages <- c("targets", "tarchetypes", "wanikani", "ggplot2", "knitr", "rmarkdown")
-
-versions <- data.frame(
-  Package = key_packages,
-  Version = sapply(key_packages, function(pkg) {
-    if (requireNamespace(pkg, quietly = TRUE)) {
-      as.character(packageVersion(pkg))
-    } else {
-      "Not installed"
-    }
-  }),
-  stringsAsFactors = FALSE
-)
-
-knitr::kable(
-  versions,
-  caption = "Key Package Versions",
-  format = "markdown",
-  row.names = FALSE
-)
-```
-
-### System Resources
-
-```{r system-resources}
-# Get system information
-sys_info <- Sys.info()
-
-system_df <- data.frame(
-  Property = c("System", "Release", "Version", "Machine", "User"),
+info_df <- data.frame(
+  Property = c("Pipeline Name", "Created At", "R Version", "Platform", "Targets Version"),
   Value = c(
-    sys_info["sysname"],
-    sys_info["release"],
-    sys_info["version"],
-    sys_info["machine"],
-    sys_info["user"]
+    metadata$pipeline_name,
+    as.character(metadata$created_at),
+    metadata$r_version,
+    metadata$platform,
+    as.character(metadata$targets_version)
   ),
   stringsAsFactors = FALSE
 )
 
 knitr::kable(
-  system_df,
-  caption = "System Information",
-  format = "markdown",
+  info_df,
+  caption = "**Table 5**: Pipeline environment details showing R and targets versions used",
   row.names = FALSE
 )
 ```
 
-### Pipeline Environment
+### R Session Info
 
-```{r pipeline-env, eval=pipeline_exists}
-if (pipeline_exists) {
-  # Try to load pipeline metadata target
-  tryCatch({
-    targets::tar_load(pipeline_metadata)
+Current R session information for reproducibility:
 
-    env_df <- data.frame(
-      Property = c(
-        "Pipeline Name",
-        "Created At",
-        "R Version",
-        "Platform",
-        "Targets Version"
-      ),
-      Value = c(
-        pipeline_metadata$pipeline_name,
-        as.character(pipeline_metadata$created_at),
-        pipeline_metadata$r_version,
-        pipeline_metadata$platform,
-        as.character(pipeline_metadata$targets_version)
-      ),
-      stringsAsFactors = FALSE
-    )
+```{r session-info}
+sess_info <- sessionInfo()
 
-    knitr::kable(
-      env_df,
-      caption = "Pipeline Environment Details",
-      format = "markdown",
-      row.names = FALSE
-    )
-  }, error = function(e) {
-    cat("Pipeline metadata not available\n")
-  })
-}
+cat("**R Version:**", sess_info$R.version$version.string, "\n\n")
+cat("**Platform:**", sess_info$platform, "\n\n")
+cat("**Running under:**", sess_info$running, "\n\n")
 ```
 
-## Performance Summary
+## Summary and Recommendations
 
-### Overall Pipeline Statistics
+### Overall Statistics
 
-```{r overall-stats, eval=pipeline_exists}
-if (pipeline_exists && nrow(meta) > 0) {
-  summary_stats <- data.frame(
-    Metric = c(
-      "Total Targets",
-      "Total Build Time",
-      "Total Memory Used",
-      "Average Build Time per Target",
-      "Average Memory per Target",
-      "Fastest Target",
-      "Slowest Target",
-      "Smallest Target",
-      "Largest Target"
-    ),
-    Value = c(
-      nrow(meta_df),
-      sprintf("%.2f seconds", sum(meta_df$seconds, na.rm = TRUE)),
-      sprintf("%.2f MB", sum(meta_df$mb, na.rm = TRUE)),
-      sprintf("%.2f seconds", mean(meta_df$seconds, na.rm = TRUE)),
-      sprintf("%.2f MB", mean(meta_df$mb, na.rm = TRUE)),
-      sprintf("%s (%.2f sec)", meta_df$name[which.min(meta_df$seconds)],
-              min(meta_df$seconds, na.rm = TRUE)),
-      sprintf("%s (%.2f sec)", meta_df$name[which.max(meta_df$seconds)],
-              max(meta_df$seconds, na.rm = TRUE)),
-      sprintf("%s (%.2f MB)", meta_df$name[which.min(meta_df$mb)],
-              min(meta_df$mb, na.rm = TRUE)),
-      sprintf("%s (%.2f MB)", meta_df$name[which.max(meta_df$mb)],
-              max(meta_df$mb, na.rm = TRUE))
-    ),
-    stringsAsFactors = FALSE
-  )
+```{r overall-stats}
+meta <- tar_meta(fields = c("name", "time", "bytes", "seconds"))
+meta_df <- as.data.frame(meta)
+meta_df$seconds <- as.numeric(meta_df$seconds)
+meta_df$mb <- meta_df$bytes / (1024^2)
 
-  knitr::kable(
-    summary_stats,
-    caption = "Overall Pipeline Performance Summary",
-    format = "markdown",
-    align = c("l", "r")
-  )
-}
+summary_df <- data.frame(
+  Metric = c(
+    "Total Targets",
+    "Total Build Time",
+    "Total Memory Used",
+    "Average Build Time",
+    "Average Memory"
+  ),
+  Value = c(
+    nrow(meta_df),
+    sprintf("%.2f seconds", sum(meta_df$seconds, na.rm = TRUE)),
+    sprintf("%.2f MB", sum(meta_df$mb, na.rm = TRUE)),
+    sprintf("%.2f seconds", mean(meta_df$seconds, na.rm = TRUE)),
+    sprintf("%.2f MB", mean(meta_df$mb, na.rm = TRUE))
+  ),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(
+  summary_df,
+  caption = "**Table 6**: Overall pipeline performance metrics",
+  align = c("l", "r")
+)
 ```
 
-## Recommendations
+### Key Benefits of Using Targets
 
-Based on the pipeline analysis:
+This pipeline demonstrates several advantages of using `targets`:
 
-```{r recommendations, eval=pipeline_exists, results='asis'}
-if (pipeline_exists && nrow(meta) > 0) {
-  cat("\n### Performance Recommendations\n\n")
+- **Caching**: Targets are only rebuilt when their dependencies change, saving computation time
+- **Reproducibility**: The pipeline tracks all dependencies and can be reproduced exactly
+- **Parallelization**: Independent targets can be computed in parallel
+- **Monitoring**: Easy to track which targets are outdated and need updating
+- **Documentation**: The pipeline itself serves as documentation of the analysis workflow
 
-  # Check for slow targets
-  slow_threshold <- quantile(meta_df$seconds, 0.75)
-  slow_targets <- meta_df$name[meta_df$seconds > slow_threshold]
-
-  if (length(slow_targets) > 0) {
-    cat("- **Slow targets detected**: Consider optimizing:\n")
-    for (target in slow_targets) {
-      cat(sprintf("  - `%s` (%.2f seconds)\n",
-                  target,
-                  meta_df$seconds[meta_df$name == target]))
-    }
-    cat("\n")
-  }
-
-  # Check for large targets
-  large_threshold <- quantile(meta_df$mb, 0.75)
-  large_targets <- meta_df$name[meta_df$mb > large_threshold]
-
-  if (length(large_targets) > 0) {
-    cat("- **Large targets detected**: Consider data reduction for:\n")
-    for (target in large_targets) {
-      cat(sprintf("  - `%s` (%.2f MB)\n",
-                  target,
-                  meta_df$mb[meta_df$name == target]))
-    }
-    cat("\n")
-  }
-
-  cat("- **Pipeline health**: ✓ All targets built successfully\n")
-  cat("- **Best practices**: Use `targets::tar_make()` to rebuild only outdated targets\n")
-  cat("- **Caching**: Pipeline uses intelligent caching - only changed targets are rebuilt\n")
-}
-```
-
-## Conclusion
-
-This vignette provides comprehensive diagnostics for the targets pipeline. Use these visualizations and statistics to:
-
-- Monitor pipeline performance
-- Identify bottlenecks
-- Optimize slow or large targets
-- Track changes over time
-- Debug pipeline issues
-
-For more information on targets, see the [targets documentation](https://docs.ropensci.org/targets/).
+For more information on using `targets`, see the [targets documentation](https://docs.ropensci.org/targets/).
