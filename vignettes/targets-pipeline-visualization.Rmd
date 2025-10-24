@@ -47,12 +47,14 @@ This vignette provides comprehensive visualization and diagnostics of the `targe
 
 ## Performance Metrics
 
+**Note on Data Loading**: The visualization objects in this vignette are loaded using `readRDS()` rather than `tar_read()` because they're generated from pipeline metadata (`tar_meta()`, `tar_manifest()`) which would create circular dependencies if included in `_targets.R`. These objects are created by the `generate_visualizations.R` script after the main pipeline completes.
+
 ### Build Time Analysis
 
 This section shows how long each target took to build, helping identify performance bottlenecks in the pipeline.
 
 ```{r build-times-plot, fig.height=5, fig.cap="**Figure 1**: Build time for each target in the pipeline. Longer bars indicate targets that take more time to compute."}
-# Load the pre-computed plot from targets
+# Load the pre-computed plot (generated outside main pipeline to avoid recursion)
 plot_build_times <- readRDS("../_targets/objects/plot_build_times")
 print(plot_build_times)
 ```
@@ -60,7 +62,7 @@ print(plot_build_times)
 The build times table below provides detailed statistics about target execution times:
 
 ```{r build-times-table}
-# Load the pre-computed table from targets
+# Load the pre-computed table
 time_stats <- readRDS("../_targets/objects/table_time_stats")
 knitr::kable(
   time_stats,

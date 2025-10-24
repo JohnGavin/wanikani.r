@@ -106,8 +106,12 @@ table_memory_stats <- {
 # Table: Target manifest
 table_manifest <- tar_manifest()
 
-# Save all visualization objects to _targets/objects/ manually
+# Save all visualization objects to _targets/objects/
+# Note: These are saved as regular RDS files, not proper targets, to avoid
+# circular dependencies (tar_meta() and tar_manifest() would need to load _targets.R)
+# The vignette loads them using readRDS() instead of tar_read()
 dir.create("_targets/objects", showWarnings = FALSE, recursive = TRUE)
+
 saveRDS(plot_build_times, "_targets/objects/plot_build_times")
 saveRDS(plot_memory_usage, "_targets/objects/plot_memory_usage")
 saveRDS(table_time_stats, "_targets/objects/table_time_stats")
