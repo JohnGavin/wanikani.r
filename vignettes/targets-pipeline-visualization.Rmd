@@ -53,7 +53,7 @@ This section shows how long each target took to build, helping identify performa
 
 ```{r build-times-plot, fig.height=5, fig.cap="**Figure 1**: Build time for each target in the pipeline. Longer bars indicate targets that take more time to compute."}
 # Load the pre-computed plot from targets
-plot_build_times <- tar_read(plot_build_times)
+plot_build_times <- readRDS("../_targets/objects/plot_build_times")
 print(plot_build_times)
 ```
 
@@ -61,7 +61,7 @@ The build times table below provides detailed statistics about target execution 
 
 ```{r build-times-table}
 # Load the pre-computed table from targets
-time_stats <- tar_read(table_time_stats)
+time_stats <- readRDS("../_targets/objects/table_time_stats")
 knitr::kable(
   time_stats,
   caption = "**Table 1**: Summary statistics of build times across all targets",
@@ -75,7 +75,7 @@ Understanding memory usage helps optimize the pipeline and identify targets that
 
 ```{r memory-plot, fig.height=5, fig.cap="**Figure 2**: Memory footprint of each target. Targets with larger memory usage may benefit from data reduction or alternative storage formats."}
 # Load the pre-computed memory plot
-plot_memory <- tar_read(plot_memory_usage)
+plot_memory <- readRDS("../_targets/objects/plot_memory_usage")
 print(plot_memory)
 ```
 
@@ -83,7 +83,7 @@ Detailed memory statistics show the distribution of resource usage across target
 
 ```{r memory-table}
 # Load the pre-computed memory statistics table
-memory_stats <- tar_read(table_memory_stats)
+memory_stats <- readRDS("../_targets/objects/table_memory_stats")
 knitr::kable(
   memory_stats,
   caption = "**Table 2**: Memory usage statistics showing total, mean, median, largest, and smallest targets",
@@ -99,7 +99,7 @@ The target manifest shows all targets in the pipeline along with their commands,
 
 ```{r manifest-table}
 # Load the target manifest
-manifest <- tar_read(table_manifest)
+manifest <- readRDS("../_targets/objects/table_manifest")
 knitr::kable(
   manifest,
   caption = "**Table 3**: Complete manifest of all targets showing their names and computation commands",

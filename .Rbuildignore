@@ -21,6 +21,7 @@
 ^gh_submit_simple\.sh$
 ^_targets\.R$
 ^_targets$
+^generate_visualizations\.R$
 ^\.github$
 ^_pkgdown\.yml$
 ^docs$
