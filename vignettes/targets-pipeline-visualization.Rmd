@@ -16,6 +16,31 @@ vignette: >
 # Check if targets is available
 has_targets <- requireNamespace("targets", quietly = TRUE)
 
+# Exit early if targets not available
+if (!has_targets) {
+  knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>",
+    eval = FALSE
+  )
+  knitr::knit_exit()
+}
+
+# Load targets only if available
+library(targets)
+
+# Check if pipeline exists
+pipeline_exists <- file.exists("_targets/meta/meta")
+if (!pipeline_exists) {
+  knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>",
+    eval = FALSE
+  )
+  knitr::knit_exit()
+}
+
+# Set chunk options for normal execution
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -24,21 +49,8 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
   echo = TRUE,  # Show code with hide/show toggle
-  eval = has_targets  # Only evaluate if targets available
+  eval = TRUE
 )
-
-# Exit early if targets not available
-if (!has_targets) {
-  knitr::knit_exit()
-}
-
-library(targets)
-
-# Check if pipeline exists
-pipeline_exists <- file.exists("_targets/meta/meta")
-if (!pipeline_exists) {
-  knitr::knit_exit()
-}
 ```
 
 ## Introduction
