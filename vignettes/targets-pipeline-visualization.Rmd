@@ -160,7 +160,9 @@ if (requireNamespace("visNetwork", quietly = TRUE)) {
 This section shows the current status of all targets in the pipeline, indicating which are up-to-date and which need rebuilding.
 
 ```{r progress-status}
-progress <- tar_progress()
+progress <- tar_progress(
+  store = file.path(pkg_root, "_targets")
+)
 
 if (nrow(progress) > 0) {
   status_summary <- table(progress$progress)
@@ -182,7 +184,10 @@ if (nrow(progress) > 0) {
 Checking for outdated targets helps maintain pipeline freshness:
 
 ```{r outdated-check}
-outdated <- tar_outdated()
+outdated <- tar_outdated(
+  script = file.path(pkg_root, "_targets.R"),
+  store = file.path(pkg_root, "_targets")
+)
 
 if (length(outdated) > 0) {
   cat("⚠ **Outdated targets** (need rebuilding):\n\n")
