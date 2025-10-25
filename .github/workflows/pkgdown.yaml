@@ -68,13 +68,16 @@ jobs:
                       ];
                     }' \
             --run '
-            # Install the package first
+            # Create a user library for installing the package
+            mkdir -p ~/R_libs
+            export R_LIBS_USER=~/R_libs
+            # Install the package to user library
             R -e "devtools::install(upgrade = \"never\", build_vignettes = FALSE)"
             # Build targets pipeline
             R -e "targets::tar_make()"
             # Generate visualization objects
             Rscript generate_visualizations.R
-            # Build pkgdown site (package already installed, build in current dir for _targets access)
+            # Build pkgdown site (package in user library, build in current dir for _targets access)
             R -e "
             pkgdown::build_site_github_pages(
               new_process = FALSE,
