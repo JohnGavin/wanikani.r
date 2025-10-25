@@ -141,9 +141,12 @@ The dependency graph visualizes relationships between targets, showing which tar
 ```{r dependency-graph, eval=pipeline_exists}
 # Generate interactive dependency visualization
 if (requireNamespace("visNetwork", quietly = TRUE)) {
+  # tar_visnetwork needs to run from package root where _targets.R exists
   targets::tar_visnetwork(
     targets_only = TRUE,
-    label = c("time", "size")
+    label = c("time", "size"),
+    script = file.path(pkg_root, "_targets.R"),
+    store = file.path(pkg_root, "_targets")
   )
 } else {
   message("Install 'visNetwork' for interactive pipeline visualization")
