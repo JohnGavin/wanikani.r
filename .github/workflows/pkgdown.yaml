@@ -72,11 +72,11 @@ jobs:
             R -e "targets::tar_make()"
             # Generate visualization objects
             Rscript generate_visualizations.R
-            # Build pkgdown site
+            # Build pkgdown site in current directory (so _targets/ is accessible)
             R -e "
             pkgdown::build_site_github_pages(
               new_process = FALSE,
-              install = TRUE,
+              install = FALSE,
               examples = TRUE
             )
             "'
