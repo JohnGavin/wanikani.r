@@ -68,11 +68,13 @@ jobs:
                       ];
                     }' \
             --run '
-            # Build targets pipeline first
+            # Install the package first
+            R -e "devtools::install(upgrade = \"never\", build_vignettes = FALSE)"
+            # Build targets pipeline
             R -e "targets::tar_make()"
             # Generate visualization objects
             Rscript generate_visualizations.R
-            # Build pkgdown site in current directory (so _targets/ is accessible)
+            # Build pkgdown site (package already installed, build in current dir for _targets access)
             R -e "
             pkgdown::build_site_github_pages(
               new_process = FALSE,
