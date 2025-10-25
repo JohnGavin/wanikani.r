@@ -207,7 +207,10 @@ Pipeline metadata provides information about the environment in which targets we
 
 ```{r pipeline-info}
 # Load pipeline metadata
-metadata <- tar_read(pipeline_metadata)
+metadata <- tar_read(
+  pipeline_metadata,
+  store = file.path(pkg_root, "_targets")
+)
 
 info_df <- data.frame(
   Property = c("Pipeline Name", "Created At", "R Version", "Platform", "Targets Version"),
@@ -245,7 +248,10 @@ cat("**Running under:**", sess_info$running, "\n\n")
 ### Overall Statistics
 
 ```{r overall-stats}
-meta <- tar_meta(fields = c("name", "time", "bytes", "seconds"))
+meta <- tar_meta(
+  fields = c("name", "time", "bytes", "seconds"),
+  store = file.path(pkg_root, "_targets")
+)
 meta_df <- as.data.frame(meta)
 meta_df$seconds <- as.numeric(meta_df$seconds)
 meta_df$mb <- meta_df$bytes / (1024^2)
