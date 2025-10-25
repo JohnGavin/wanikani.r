@@ -13,9 +13,26 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-# Check if targets is available and if pipeline exists
+# Check if targets is available
 has_targets <- requireNamespace("targets", quietly = TRUE)
-pipeline_exists <- has_targets && file.exists("_targets/meta/meta")
+
+# Find the package root directory (where _targets/ lives)
+# Try multiple methods to find it
+pkg_root <- tryCatch({
+  # Method 1: Look for _targets relative to this file
+  vignette_dir <- getwd()
+  if (file.exists(file.path(vignette_dir, "_targets/meta/meta"))) {
+    vignette_dir
+  } else if (file.exists(file.path(dirname(vignette_dir), "_targets/meta/meta"))) {
+    dirname(vignette_dir)
+  } else if (file.exists(file.path(dirname(dirname(vignette_dir)), "_targets/meta/meta"))) {
+    dirname(dirname(vignette_dir))
+  } else {
+    NULL
+  }
+}, error = function(e) NULL)
+
+pipeline_exists <- has_targets && !is.null(pkg_root)
 
 # Set evaluation based on availability
 knitr::opts_chunk$set(
@@ -30,7 +47,6 @@ knitr::opts_chunk$set(
 )
 
 # Load targets only if available
-# Note: library() only executes if targets was found by requireNamespace()
 if (has_targets && pipeline_exists) {
   library(targets)
 }
@@ -64,7 +80,7 @@ This section shows how long each target took to build, helping identify performa
 
 ```{r build-times-plot, fig.height=5, fig.cap="**Figure 1**: Build time for each target in the pipeline. Longer bars indicate targets that take more time to compute."}
 # Load the pre-computed plot (generated outside main pipeline to avoid recursion)
-plot_build_times <- readRDS("../_targets/objects/plot_build_times")
+plot_build_times <- readRDS(file.path(pkg_root, "_targets/objects/plot_build_times"))
 print(plot_build_times)
 ```
 
@@ -72,7 +88,7 @@ The build times table below provides detailed statistics about target execution 
 
 ```{r build-times-table}
 # Load the pre-computed table
-time_stats <- readRDS("../_targets/objects/table_time_stats")
+time_stats <- readRDS(file.path(pkg_root, "_targets/objects/table_time_stats"))
 knitr::kable(
   time_stats,
   caption = "**Table 1**: Summary statistics of build times across all targets",
@@ -86,7 +102,7 @@ Understanding memory usage helps optimize the pipeline and identify targets that
 
 ```{r memory-plot, fig.height=5, fig.cap="**Figure 2**: Memory footprint of each target. Targets with larger memory usage may benefit from data reduction or alternative storage formats."}
 # Load the pre-computed memory plot
-plot_memory <- readRDS("../_targets/objects/plot_memory_usage")
+plot_memory <- readRDS(file.path(pkg_root, "_targets/objects/plot_memory_usage"))
 print(plot_memory)
 ```
 
@@ -94,7 +110,7 @@ Detailed memory statistics show the distribution of resource usage across target
 
 ```{r memory-table}
 # Load the pre-computed memory statistics table
-memory_stats <- readRDS("../_targets/objects/table_memory_stats")
+memory_stats <- readRDS(file.path(pkg_root, "_targets/objects/table_memory_stats"))
 knitr::kable(
   memory_stats,
   caption = "**Table 2**: Memory usage statistics showing total, mean, median, largest, and smallest targets",
@@ -110,7 +126,7 @@ The target manifest shows all targets in the pipeline along with their commands,
 
 ```{r manifest-table}
 # Load the target manifest
-manifest <- readRDS("../_targets/objects/table_manifest")
+manifest <- readRDS(file.path(pkg_root, "_targets/objects/table_manifest"))
 knitr::kable(
   manifest,
   caption = "**Table 3**: Complete manifest of all targets showing their names and computation commands",
